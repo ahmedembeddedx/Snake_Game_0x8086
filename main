@@ -7,9 +7,9 @@ y_snake: dw 0
 xy_snake: dw 0
 len: dw 1
 ltmv: dw 1
-
-
-
+is_pause: dw 0
+score: dw " Last Move: X"
+status: dw "ESC-->End"
 
 start:
 	call bg
@@ -32,7 +32,7 @@ game:
 	main:
 		cmp word[y_snake], 0
 		je end
-		cmp word[y_snake], 25 
+		cmp word[y_snake], 22 
 		jae end
 		cmp word[x_snake], 0
 		je end
@@ -62,7 +62,7 @@ check_key:
 	jz cont
 	mov ah, 0x0
 	int 16h
-		
+	
 	cmp ah, 4Bh
 	je left
 	cmp ah, 4Dh
@@ -71,6 +71,8 @@ check_key:
 	je up
 	cmp ah, 50h
 	je down
+	cmp ah, 01h
+	je end
 	jmp cont
 
 left:
@@ -78,6 +80,7 @@ left:
 	je cont
 	add word[x_snake], -2
 	mov word[ltmv], 0
+	mov word[score+12], 'L'
 	ret
 
 right:
@@ -85,6 +88,7 @@ right:
 	je cont
 	add word[x_snake], 2
 	mov word[ltmv], 1
+	mov word[score+12], 'R'
 	ret
 
 up:
@@ -92,6 +96,7 @@ up:
 	je cont
 	add word[y_snake], -1
 	mov word[ltmv], 2
+	mov word[score+12], 'U'
 	ret
 
 down:
@@ -99,6 +104,7 @@ down:
 	je cont
 	add word[y_snake], 1
 	mov word[ltmv], 3
+	mov word[score+12], 'D'
 	ret
 
 cont:
@@ -208,12 +214,30 @@ bg:
 	mov cx, 80
 	cld
 	rep stosw
-	mov di, 3680
+	mov di, 3520
 	mov cx, 80
 	cld 
 	rep stosw
 	
+	mov ah, 0x13
+	mov al, 1 
+	mov bh, 0 
+	mov bl, 7
+	mov dx, 0x1701 
+	mov cx, 13
+	push cs 
+	pop es 
+	mov bp, score
+	int 0x10 
 	
+	mov dx, 0x1715
+	mov cx, 9
+	push cs 
+	pop es 
+	mov bp, status
+	int 0x10 
+
+
 	
 	
 	pop es
