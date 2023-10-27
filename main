@@ -2,15 +2,22 @@
 
 jmp start
 
-x_snake: dw 0
+x_snake: dw 20
 y_snake: dw 0
 xy_snake: dw 0
 len: dw 1
 ltmv: dw 1
 is_end: dw 0
-score: dw " Last Move: X"
+move: dw " Last Move: X"
 status: dw "ESC-->End"
 end_message: dw "Game has been ended"
+score: dw "Score: "
+
+xy_fruit: dw 0
+x_fruit: dw 0
+y_fruit: dw 0
+
+
 
 start:
 	call bg
@@ -29,7 +36,7 @@ game:
 	mov word[x_snake], 20
 	mov word[y_snake], 2
 	call snake
-
+	call fruit
 	main:
 		cmp word[y_snake], 0
 		je end
@@ -41,10 +48,19 @@ game:
 		jae end
 		call check_key
 		
-		call delay
-		;call bg
-        call snake
-			
+		cmp word[ltmv], 1
+		jbe label1
+		
+		push 6
+		jmp label2
+		
+		label1:
+			push 3
+		label2:
+			call delay
+			call bg
+			call snake
+
 	jmp main
 
 	pop es
@@ -79,17 +95,17 @@ check_key:
 left:
 	cmp word[ltmv], 1
 	je cont
-	add word[x_snake], -2
+	add word[x_snake], -1
 	mov word[ltmv], 0
-	mov word[score+12], 'L'
+	mov word[move+12], 'L'
 	ret
-
+ 
 right:
 	cmp word[ltmv], 0
 	je cont
-	add word[x_snake], 2
+	add word[x_snake], 1
 	mov word[ltmv], 1
-	mov word[score+12], 'R'
+	mov word[move+12], 'R'
 	ret
 
 up:
@@ -97,7 +113,7 @@ up:
 	je cont
 	add word[y_snake], -1
 	mov word[ltmv], 2
-	mov word[score+12], 'U'
+	mov word[move+12], 'U'
 	ret
 
 down:
@@ -105,7 +121,7 @@ down:
 	je cont
 	add word[y_snake], 1
 	mov word[ltmv], 3
-	mov word[score+12], 'D'
+	mov word[move+12], 'D'
 	ret
 
 cont:
@@ -119,6 +135,33 @@ cont:
 	je down
 	ret
 
+fruit:
+	push ax
+	push bx
+	push cx
+	push dx
+	push si
+	push di
+	push es
+	
+	mov dx, 0xB800
+	mov es, dx
+	call Genxy_fruit
+	mov di, word[xy_fruit]
+	mov ax, 0x07DC
+	stosw
+	
+	
+	pop es
+	pop di
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	ret
+
+
 snake:	
 	push ax
 	push dx
@@ -127,18 +170,41 @@ snake:
 	push es
 	std
 	
-	call bg
 	mov dx, 0xB800
 	mov es, dx
 	mov dh, 0x02
 	mov dl, 0xDC
 	
-	call get_cords
 	
+	mov ax, [x_snake]
+	push ax
+	mov ax, [y_snake]
+	push ax
+	mov ax, xy_snake
+	push ax
+	call get_cords
+
+	
+	mov ax, [xy_snake]
+	cmp ax, [xy_fruit]
+	jne l4 
+	add word[len], 0
+	call Genxy_fruit
+	
+	l4:	
 	mov di, word[xy_snake]
-	mov cx, [len]
+	mov cx, word[len]
 	xchg ax, dx
+	mov ax, 0x07DC
+	mov [es:di], ax
+	add di, 2
+	mov ax, 0x02DC
+	dec cx
 	rep stosw
+	mov ax, 0x07DC
+	mov di, word[xy_fruit]
+	stosw
+	
 	xchg ax, dx
 	
 	
@@ -150,26 +216,34 @@ snake:
 	ret
 	
 get_cords:
+	push bp
+	mov bp, sp
 	push ax
 	push bx
 
-	mov al, byte[y_snake]
+	mov al, [bp+6]
 	mov bl, 80
 	mul bl
-	add ax, word[x_snake]
+	add ax, [bp+8]
 	shl ax, 1
-	mov word[xy_snake], ax
+	mov bx, [bp+4]
+	mov [bx], ax
 	
 	pop bx
 	pop ax
-	ret
+	pop bp
+	ret 6
+
+
 	
 delay:
+	push bp
+	mov bp, sp
 	push cx
 	push dx
 	push di
 	
-	mov cx, 5
+	mov cx, [bp+4]
 	mov di, 0
 
 	l1: 
@@ -182,7 +256,8 @@ delay:
 	pop di
 	pop dx
 	pop cx
-	ret
+	pop bp
+	ret 2
 
 
 bg:
@@ -228,7 +303,7 @@ bg:
 	mov cx, 13
 	push cs 
 	pop es 
-	mov bp, score
+	mov bp, move
 	int 0x10 
 	
 	mov dx, 0x1715
@@ -238,7 +313,12 @@ bg:
 	mov bp, status
 	int 0x10 
 
-
+	mov dx, 0x1725
+	mov cx, 7
+	push cs 
+	pop es 
+	mov bp, score
+	int 0x10 
 	
 	
 	pop es
@@ -247,6 +327,90 @@ bg:
 	pop cx
 	ret
 
+Genxy_fruit:
+
+	push cx
+	push ax
+	push dx
+	
+	call GenRandRow
+	call GenRandCol
+	mov ax, word[x_fruit]
+	push ax
+	mov ax, word[y_fruit]
+	push ax
+	mov ax, xy_fruit
+	push ax
+
+	call get_cords
+
+	; mov ah, 0x00
+	; int 0x1A 
+	; mov ax, dx
+	; xor dx, dx
+	; mov cx, 3360
+	; div cx
+	
+	; shr dx, 1
+	; shl dx, 1
+	
+	; add dx, 160
+	
+	; mov word[xy_fruit],dx
+	
+	pop dx
+	pop ax
+	pop cx
+	ret
+
+GenRandRow:
+	push cx
+	push ax
+	push dx
+	
+	mov ah, 0x00
+	int 0x1A 
+	mov ax, dx
+	xor dx, dx
+	mov cx, 20
+	div cx
+	
+	shr dx, 1
+	shl dx, 1
+	
+	add dx, 2
+	
+	mov word[y_fruit],dx
+	
+	pop dx
+	pop ax
+	pop cx
+	ret
+
+GenRandCol:
+	push cx
+	push ax
+	push dx
+	
+	mov ah, 0x00
+	int 0x1A 
+	mov ax, dx
+	xor dx, dx
+	mov cx, 70
+	div cx
+	
+	shr dx, 1
+	shl dx, 1
+	
+	add dx, 3
+	
+	mov word[x_fruit],dx
+	
+	pop dx
+	pop ax
+	pop cx
+	ret
+	
 end:
 	mov ah, 0x13
 	mov al, 1 
