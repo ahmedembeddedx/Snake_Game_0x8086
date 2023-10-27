@@ -11,7 +11,7 @@ is_end: dw 0
 move: dw " Last Move: X"
 status: dw "ESC-->End"
 end_message: dw "Game has been ended"
-score: dw "Score: "
+score: dw "Score: 00"
 
 xy_fruit: dw 0
 x_fruit: dw 0
@@ -190,16 +190,22 @@ snake:
 	jne l4 
 	add word[len], 0
 	call Genxy_fruit
+	mov al, byte[score+8]
+	cmp al, '9'
+	je label3
+	add byte[score+8], 1
+	jmp l4
+	
+	label3:
+	add byte[score+7], 1
+	mov byte[score+8], '0'
+	
 	
 	l4:	
 	mov di, word[xy_snake]
 	mov cx, word[len]
 	xchg ax, dx
-	mov ax, 0x07DC
-	mov [es:di], ax
-	add di, 2
 	mov ax, 0x02DC
-	dec cx
 	rep stosw
 	mov ax, 0x07DC
 	mov di, word[xy_fruit]
@@ -314,7 +320,7 @@ bg:
 	int 0x10 
 
 	mov dx, 0x1725
-	mov cx, 7
+	mov cx, 9
 	push cs 
 	pop es 
 	mov bp, score
@@ -332,9 +338,8 @@ Genxy_fruit:
 	push cx
 	push ax
 	push dx
-	
-	call GenRandRow
-	call GenRandCol
+
+	call GenRandCoords
 	mov ax, word[x_fruit]
 	push ax
 	mov ax, word[y_fruit]
@@ -343,51 +348,13 @@ Genxy_fruit:
 	push ax
 
 	call get_cords
-
-	; mov ah, 0x00
-	; int 0x1A 
-	; mov ax, dx
-	; xor dx, dx
-	; mov cx, 3360
-	; div cx
-	
-	; shr dx, 1
-	; shl dx, 1
-	
-	; add dx, 160
-	
-	; mov word[xy_fruit],dx
 	
 	pop dx
 	pop ax
 	pop cx
 	ret
 
-GenRandRow:
-	push cx
-	push ax
-	push dx
-	
-	mov ah, 0x00
-	int 0x1A 
-	mov ax, dx
-	xor dx, dx
-	mov cx, 20
-	div cx
-	
-	shr dx, 1
-	shl dx, 1
-	
-	add dx, 2
-	
-	mov word[y_fruit],dx
-	
-	pop dx
-	pop ax
-	pop cx
-	ret
-
-GenRandCol:
+GenRandCoords:
 	push cx
 	push ax
 	push dx
@@ -406,6 +373,19 @@ GenRandCol:
 	
 	mov word[x_fruit],dx
 	
+	mov ah, 0x00
+	int 0x1A 
+	mov ax, dx
+	xor dx, dx
+	mov cx, 20
+	div cx
+	
+	shr dx, 1
+	shl dx, 1
+	add dx, 2
+	
+	mov word[y_fruit],dx
+	
 	pop dx
 	pop ax
 	pop cx
@@ -416,7 +396,7 @@ end:
 	mov al, 1 
 	mov bh, 0 
 	mov bl, 0xEE
-	mov dh, 0x0A
+	mov dh, 0x0A 
 	mov dl, 30
 	mov cx, 19
 	push cs 
@@ -429,5 +409,5 @@ end:
 	int 0x10 
 	
 	
-	mov ax, 0x4C00
-	int 0x21
+mov ax, 0x4C00
+int 0x21
