@@ -7,9 +7,10 @@ y_snake: dw 0
 xy_snake: dw 0
 len: dw 1
 ltmv: dw 1
-is_pause: dw 0
+is_end: dw 0
 score: dw " Last Move: X"
 status: dw "ESC-->End"
+end_message: dw "Game has been ended"
 
 start:
 	call bg
@@ -247,5 +248,22 @@ bg:
 	ret
 
 end:
-mov ax, 0x4C00
-int 0x21
+	mov ah, 0x13
+	mov al, 1 
+	mov bh, 0 
+	mov bl, 0xEE
+	mov dh, 0x0A
+	mov dl, 30
+	mov cx, 19
+	push cs 
+	pop es 
+	mov bp, end_message
+	int 0x10 
+	
+	mov dx, 0x1700
+	mov cx, 0
+	int 0x10 
+	
+	
+	mov ax, 0x4C00
+	int 0x21
