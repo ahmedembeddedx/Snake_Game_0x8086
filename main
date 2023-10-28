@@ -2,21 +2,19 @@
 
 jmp start
 
-x_snake: dw 20
+x_snake: dw 0
 y_snake: dw 0
 xy_snake: dw 0
-len: dw 1
+len: dw 3
 ltmv: dw 1
 is_end: dw 0
 move: dw " Last Move: X"
-status: dw "ESC-->End"
+status: dw "ESC-->END"
 end_message: dw "Game has been ended"
-score: dw "Score: 00"
-
+score: dw "Score: 000"
 xy_fruit: dw 0
 x_fruit: dw 0
 y_fruit: dw 0
-
 
 
 start:
@@ -36,7 +34,7 @@ game:
 	mov word[x_snake], 20
 	mov word[y_snake], 2
 	call snake
-	call fruit
+	call Genxy_fruit
 	main:
 		cmp word[y_snake], 0
 		je end
@@ -135,33 +133,6 @@ cont:
 	je down
 	ret
 
-fruit:
-	push ax
-	push bx
-	push cx
-	push dx
-	push si
-	push di
-	push es
-	
-	mov dx, 0xB800
-	mov es, dx
-	call Genxy_fruit
-	mov di, word[xy_fruit]
-	mov ax, 0x07DC
-	stosw
-	
-	
-	pop es
-	pop di
-	pop si
-	pop dx
-	pop cx
-	pop bx
-	pop ax
-	ret
-
-
 snake:	
 	push ax
 	push dx
@@ -188,30 +159,92 @@ snake:
 	mov ax, [xy_snake]
 	cmp ax, [xy_fruit]
 	jne l4 
-	add word[len], 0
+	add word[len], 1
 	call Genxy_fruit
-	mov al, byte[score+8]
+	mov al, byte[score+9]
 	cmp al, '9'
 	je label3
-	add byte[score+8], 1
+	add byte[score+9], 1
 	jmp l4
 	
 	label3:
+	mov al, byte[score+8]
+	cmp al, '9'
+	je label4
+	add byte[score+8], 1
+	mov byte[score+9], '0'
+	jmp l4
+	
+	label4:
 	add byte[score+7], 1
 	mov byte[score+8], '0'
+	mov byte[score+9], '0'
 	
-	
+	;printing snake here
 	l4:	
+	
+	cld
+	cmp byte[ltmv], 1
+	je tag1
+	cmp byte[ltmv], 0
+	je tag2
+	cmp byte[ltmv], 3
+	je tag3
+	cmp byte[ltmv], 2
+	je tag4
+		
+	tag1: 
+	std
+	jmp final_tag
+	
+	tag2:
+	cld
+	jmp final_tag
+	
+	tag3:
 	mov di, word[xy_snake]
 	mov cx, word[len]
-	xchg ax, dx
+	mov ax, 0x0FDC
+	mov [es:di], ax
+	dec cx
+	shr cx, 1
+	mov ax, 0x02B2
+	l5:
+	sub di, 160
+	mov [es:di], ax
+	loop l5
+	jmp fruit
+	
+	tag4:
+	mov di, word[xy_snake]
+	mov cx, word[len]
+	mov ax, 0x0FDC
+	mov [es:di], ax
+	dec cx
+	shr cx, 1
+	mov ax, 0x02B2
+	l6:
+	add	di, 160
+	mov [es:di], ax
+	loop l6
+	jmp fruit
+	
+	
+	final_tag:
+	mov di, word[xy_snake]
+	mov cx, word[len]
+	mov ax, 0x0FDC
+	stosw
+	dec cx
+	
 	mov ax, 0x02DC
 	rep stosw
-	mov ax, 0x07DC
+	
+	fruit:
+	mov ax, 0x03DC
 	mov di, word[xy_fruit]
 	stosw
 	
-	xchg ax, dx
 	
 	
 	pop es
@@ -304,7 +337,7 @@ bg:
 	mov ah, 0x13
 	mov al, 1 
 	mov bh, 0 
-	mov bl, 7
+	mov bl, 0xF
 	mov dx, 0x1701 
 	mov cx, 13
 	push cs 
@@ -320,7 +353,7 @@ bg:
 	int 0x10 
 
 	mov dx, 0x1725
-	mov cx, 9
+	mov cx, 10
 	push cs 
 	pop es 
 	mov bp, score
