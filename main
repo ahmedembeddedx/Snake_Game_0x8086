@@ -2,9 +2,13 @@
 
 jmp start
 
-x_snake: dw 0
-y_snake: dw 0
-xy_snake: dw 0
+x_snake_s: dw 0
+y_snake_s: dw 0
+xy_snake_s: dw 0
+x_snake_e: dw 0
+y_snake_e: dw 0
+xy_snake_e: dw 0
+
 last_pos: dw 0
 len: dw 3
 ltmv: dw 1
@@ -24,8 +28,8 @@ start:
 	jmp end
 	
 reset:
-	mov word[x_snake], 20
-	mov word[y_snake], 2
+	mov word[x_snake_s], 20
+	mov word[y_snake_s], 2
 	mov word[ltmv], 1
 	mov word[len], 3
 	mov word[score+7], 48
@@ -92,7 +96,7 @@ check_key:
 left:
 	cmp word[ltmv], 1
 	je cont1
-	add word[x_snake], -1
+	add word[x_snake_s], -1
 	mov word[ltmv], 0
 	mov word[move+12], 'L'
 	ret
@@ -100,7 +104,7 @@ left:
 right:
 	cmp word[ltmv], 0
 	je cont1
-	add word[x_snake], 1
+	add word[x_snake_s], 1
 	mov word[ltmv], 1
 	mov word[move+12], 'R'
 	ret
@@ -108,7 +112,7 @@ right:
 up:
 	cmp word[ltmv], 3
 	je cont1
-	add word[y_snake], -1
+	add word[y_snake_s], -1
 	mov word[ltmv], 2
 	mov word[move+12], 'U'
 	ret
@@ -116,7 +120,7 @@ up:
 down:
 	cmp word[ltmv], 2
 	je cont1
-	add word[y_snake], 1
+	add word[y_snake_s], 1
 	mov word[ltmv], 3
 	mov word[move+12], 'D'
 	ret
@@ -145,21 +149,21 @@ snake:
 	mov es, dx
 	
 	
-	mov ax, [x_snake]
+	mov ax, [x_snake_s]
 	push ax
-	mov ax, [y_snake]
+	mov ax, [y_snake_s]
 	push ax
-	mov ax, xy_snake
+	mov ax, xy_snake_s
 	push ax
 	call get_cords
 
-	mov di, word[xy_snake]
+	mov di, word[xy_snake_s]
 	mov bx, [es:di]
 	mov word[last_pos], bx
 	
 	label6:
-	call bg
-	mov ax, [xy_snake]
+	;call bg
+	mov ax, [xy_snake_s]
 	cmp ax, [xy_fruit]
 	jne label5
 	add word[len], 1
@@ -203,7 +207,7 @@ snake:
 	jmp cont3
 	
 	tag3:
-	mov di, word[xy_snake]
+	mov di, word[xy_snake_s]
 	mov cx, word[len]
 	mov ax, 0x0FDC
 	mov [es:di], ax
@@ -217,7 +221,7 @@ snake:
 	jmp fruit
 	
 	tag4:
-	mov di, word[xy_snake]
+	mov di, word[xy_snake_s]
 	mov cx, word[len]
 	mov ax, 0x0FDC
 	mov [es:di], ax
@@ -232,7 +236,7 @@ snake:
 	
 	
 	cont3:
-	mov di, word[xy_snake]
+	mov di, word[xy_snake_s]
 	mov cx, word[len]
 	mov ax, 0x0FDC
 	stosw
