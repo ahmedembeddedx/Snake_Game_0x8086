@@ -8,9 +8,11 @@ xy_snake_s: dw 0
 x_snake_e: dw 0
 y_snake_e: dw 0
 xy_snake_e: dw 0
-
+x_snake_l: dw 0
+y_snake_l: dw 0
+xy_snake_l: dw 0
 last_pos: dw 0
-len: dw 3
+;len: dw 3
 ltmv: dw 1
 move: dw " Last Move: X"
 status: dw "ESC-->END"
@@ -28,15 +30,40 @@ start:
 	jmp end
 	
 reset:
-	mov word[x_snake_s], 20
+	push ax
+	push cx
+	push di
+	push es
+	
+	mov word[x_snake_s], 15
 	mov word[y_snake_s], 2
+	mov word[x_snake_e], 13
+	mov word[y_snake_e], 2
+	
 	mov word[ltmv], 1
-	mov word[len], 3
 	mov word[score+7], 48
 	mov word[score+8], 48
 	mov word[score+9], 48
-	ret
+	mov cx, 2
+	mov ax, 0xB800
+	mov es, ax
+	mov ax, word[x_snake_s]
+	push ax
+	mov ax, word[y_snake_s]
+	push ax
+	mov ax, xy_snake_s
+	push ax
+	call get_cords
+	mov di, word[xy_snake_s]
+	std
+	mov ax, 0x03DC
+	rep stosw
 	
+	pop es
+	pop di
+	pop cx
+	pop ax
+	ret
 game:
 	push ax
 	push bx
@@ -142,32 +169,39 @@ snake:
 	push cx
 	push dx
 	push di
+	push si
 	push es
-
+	mov ax, 0xB800
+	mov es, ax
+	call info
 	
-	mov dx, 0xB800
-	mov es, dx
 	
-	
-	mov ax, [x_snake_s]
+	mov ax, word[x_snake_s]
 	push ax
-	mov ax, [y_snake_s]
+	mov ax, word[y_snake_s]
 	push ax
 	mov ax, xy_snake_s
 	push ax
 	call get_cords
-
 	mov di, word[xy_snake_s]
-	mov bx, [es:di]
-	mov word[last_pos], bx
+	mov ax, [es:di]
+	mov word[last_pos], ax
 	
-	label6:
-	;call bg
-	mov ax, [xy_snake_s]
-	cmp ax, [xy_fruit]
-	jne label5
-	add word[len], 1
-	call Genxy_fruit
+	cmp ax, 0x02DC
+	je cont3
+	
+	mov ax, word[x_snake_e]
+	push ax
+	mov ax, word[y_snake_e]
+	push ax
+	mov ax, xy_snake_e
+	push ax
+	call get_cords
+	mov si, word[xy_snake_e]
+	mov word[es:si], 0x0720
+	jmp cont5
+	
+	cont3:
 	mov al, byte[score+9]
 	cmp al, '9'
 	je label3
@@ -185,80 +219,33 @@ snake:
 	mov byte[score+8], '0'
 	mov byte[score+9], '0'
 	
-	
-	;printing snake here
 	label5:
-	cld
-	cmp byte[ltmv], 1
-	je tag1
-	cmp byte[ltmv], 0
-	je tag2
-	cmp byte[ltmv], 3
-	je tag3
-	cmp byte[ltmv], 2
-	je tag4
-		
-	tag1: 
-	std
-	jmp cont3
-	
-	tag2:
-	cld
-	jmp cont3
-	
-	tag3:
-	mov di, word[xy_snake_s]
-	mov cx, word[len]
-	mov ax, 0x0FDC
-	mov [es:di], ax
-	dec cx
-	shr cx, 1
-	mov ax, 0x03B1
-	l1:
-	sub di, 160
-	mov [es:di], ax
-	loop l1
-	jmp fruit
-	
-	tag4:
-	mov di, word[xy_snake_s]
-	mov cx, word[len]
-	mov ax, 0x0FDC
-	mov [es:di], ax
-	dec cx
-	shr cx, 1
-	mov ax, 0x03B1
-	l2:
-	add	di, 160
-	mov [es:di], ax
-	loop l2
-	jmp fruit
+	call Genxy_fruit
 	
 	
-	cont3:
-	mov di, word[xy_snake_s]
-	mov cx, word[len]
-	mov ax, 0x0FDC
-	stosw
-	dec cx
-	mov ax, 0x03DC
-	rep stosw
 	
-	fruit:
+	cont5:
+	cmp word[ltmv], 1
+	jle i1
+	mov word[es:di], 0x03B1	
+	jmp i2
+	i1:
+	mov word[es:di], 0x03DC
+	i2:
 	mov ax, 0x02DC
 	mov di, word[xy_fruit]
 	stosw
 	
-	mov bx, word[last_pos]
-	cmp bx, 0x0720
+	cmp word[last_pos], 0x0720
 	je cont4
-	cmp bx, 0x02DC
+	cmp word[last_pos], 0x02DC
 	je cont4
 	jmp end
 	
 	
 	cont4:
 	pop es
+	pop si
 	pop di
 	pop dx
 	pop cx
@@ -363,6 +350,22 @@ bg:
 	mov cx, 40
 	cld 
 	rep stosw
+	call info
+	pop es
+	pop di
+	pop dx
+	pop cx
+	ret
+	
+info:
+	push bp
+	push ax
+	push bx
+	push cx
+	push dx
+	push si
+	push di
+	push es
 	
 	mov ah, 0x13
 	mov al, 1 
@@ -387,15 +390,18 @@ bg:
 	push cs 
 	pop es 
 	mov bp, score
-	int 0x10 
-	
+	int 0x10 	
 	
 	pop es
 	pop di
+	pop si
 	pop dx
 	pop cx
+	pop bx
+	pop ax
+	pop bp
 	ret
-
+	
 Genxy_fruit:
 
 	push cx
