@@ -12,8 +12,8 @@ x_snake_l: dw 0
 y_snake_l: dw 0
 xy_snake_l: dw 0
 last_pos: dw 0
-;len: dw 3
 ltmv: dw 1
+level: dw 6
 move: dw " Last Move: X"
 status: dw "ESC-->END"
 end_message: dw "Game has been ended"
@@ -24,11 +24,21 @@ x_fruit: dw 0
 y_fruit: dw 0
 
 
+
+
 start:
+	call select_level
+	call select_color
 	call bg
 	call game
 	jmp end
+
+select_level:
+
+	ret
+select_color:
 	
+	ret
 reset:
 	push ax
 	push cx
@@ -80,11 +90,16 @@ game:
 		cmp word[ltmv], 1
 		jbe label1
 		
-		push 6
+		mov ax, [level]
+		sub ax, 4
+		push ax
 		jmp label2
 		
 		label1:
-			push 3
+			mov ax, [level]
+			sub ax, 4
+			shr ax, 1
+			push ax
 		label2:
 			call delay
 			call snake
