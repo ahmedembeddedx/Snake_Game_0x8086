@@ -13,7 +13,7 @@ y_snake_l: dw 0
 xy_snake_l: dw 0
 last_pos: dw 0
 ltmv: dw 1
-level: dw 6
+level: dw 5
 move: dw " Last Move: X"
 status: dw "ESC-->END"
 end_message: dw "Game has been ended"
@@ -32,6 +32,33 @@ start:
 	call bg
 	call game
 	jmp end
+
+note:
+	push ax
+	push bx
+	mov al, 182
+	out 43h, al
+	mov ax, 2711
+	out 42h, al
+	mov al, ah
+	out 42h, al
+	in al, 61h
+	or al, 00000011b
+	out 61h, al
+	mov bx, 2
+	.pause1:
+	mov cx, 65535
+	.pause2:
+	dec cx
+	jne .pause2
+	dec bx
+	jne .pause1
+	in al, 61h
+	and al, 11111100b
+	out 61h, al
+	pop bx
+	pop bx
+	ret
 
 select_level:
 
@@ -91,13 +118,15 @@ game:
 		jbe label1
 		
 		mov ax, [level]
-		sub ax, 4
+		; mov bx, 3
+		; sub ax, bx
 		push ax
 		jmp label2
 		
 		label1:
 			mov ax, [level]
-			sub ax, 4
+			; mov bx, 3
+			; sub ax, bx
 			shr ax, 1
 			push ax
 		label2:
@@ -217,6 +246,7 @@ snake:
 	jmp cont5
 	
 	cont3:
+	call note
 	mov al, byte[score+9]
 	cmp al, '9'
 	je label3
@@ -233,7 +263,7 @@ snake:
 	add byte[score+7], 1
 	mov byte[score+8], '0'
 	mov byte[score+9], '0'
-	
+
 	label5:
 	call Genxy_fruit
 	
@@ -526,6 +556,7 @@ ending_message:
 	ret
 	
 end:
+	call note
 	call ending_message
 mov ax, 0x4C00
 int 0x21
