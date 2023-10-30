@@ -187,7 +187,7 @@ snake:
 	mov ax, [es:di]
 	mov word[last_pos], ax
 	
-	cmp ax, 0x02DC
+	cmp ax, 0x0CDC
 	je cont3
 	
 	mov ax, word[x_snake_e]
@@ -232,13 +232,13 @@ snake:
 	i1:
 	mov word[es:di], 0x03DC
 	i2:
-	mov ax, 0x02DC
+	mov ax, 0x0CDC
 	mov di, word[xy_fruit]
 	stosw
 	
 	cmp word[last_pos], 0x0720
 	je cont4
-	cmp word[last_pos], 0x02DC
+	cmp word[last_pos], 0x0CDC
 	je cont4
 	jmp end
 	
