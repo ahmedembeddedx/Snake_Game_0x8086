@@ -8,9 +8,6 @@ xy_snake_s: dw 0
 x_snake_e: dw 0
 y_snake_e: dw 0
 xy_snake_e: dw 0
-x_snake_l: dw 0
-y_snake_l: dw 0
-xy_snake_l: dw 0
 last_pos: dw 0
 ltmv: dw 1
 level: dw 5
@@ -24,12 +21,12 @@ x_fruit: dw 0
 y_fruit: dw 0
 
 
-
-
 start:
 	call select_level
 	call select_color
 	call bg
+	mov ah, 0
+	int 0x10
 	call game
 	jmp end
 
@@ -209,16 +206,12 @@ cont1:
 
 snake:	
 	push ax
-	push bx
-	push cx
-	push dx
 	push di
 	push si
 	push es
 	mov ax, 0xB800
 	mov es, ax
 	call info
-	
 	
 	mov ax, word[x_snake_s]
 	push ax
@@ -233,42 +226,11 @@ snake:
 	
 	cmp ax, 0x0CDC
 	je cont3
-	
-	mov ax, word[x_snake_e]
-	push ax
-	mov ax, word[y_snake_e]
-	push ax
-	mov ax, xy_snake_e
-	push ax
-	call get_cords
-	mov si, word[xy_snake_e]
-	mov word[es:si], 0x0720
+	call update_back_pointer
 	jmp cont5
 	
 	cont3:
-	call note
-	mov al, byte[score+9]
-	cmp al, '9'
-	je label3
-	add byte[score+9], 1
-	jmp label5
-	label3:
-	mov al, byte[score+8]
-	cmp al, '9'
-	je label4
-	add byte[score+8], 1
-	mov byte[score+9], '0'
-	jmp label5
-	label4:
-	add byte[score+7], 1
-	mov byte[score+8], '0'
-	mov byte[score+9], '0'
-
-	label5:
-	call Genxy_fruit
-	
-	
-	
+	call update_score
 	cont5:
 	cmp word[ltmv], 1
 	jle i1
@@ -292,11 +254,48 @@ snake:
 	pop es
 	pop si
 	pop di
-	pop dx
-	pop cx
-	pop bx
 	pop ax
 	ret
+
+update_back_pointer:
+	
+	add word[x_snake_e], 1
+	mov ax, word[x_snake_e]
+	push ax
+	mov ax, word[y_snake_e]
+	push ax
+	mov ax, xy_snake_e
+	push ax
+	call get_cords
+	mov si, word[xy_snake_e]
+	
+	mov word[es:si], 0x0720
+	
+	ret
+update_score:
+	push ax
+	call note
+	mov al, byte[score+9]
+	cmp al, '9'
+	je label3
+	add byte[score+9], 1
+	jmp label5
+	label3:
+	mov al, byte[score+8]
+	cmp al, '9'
+	je label4
+	add byte[score+8], 1
+	mov byte[score+9], '0'
+	jmp label5
+	label4:
+	add byte[score+7], 1
+	mov byte[score+8], '0'
+	mov byte[score+9], '0'
+
+	label5:
+	call Genxy_fruit
+	pop ax
+	ret 
 	
 get_cords:
 	push bp
