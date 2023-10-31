@@ -10,7 +10,7 @@ y_snake_e: dw 0
 xy_snake_e: dw 0
 last_pos: dw 0
 ltmv: dw 1
-level: dw 5
+level: dw 4
 move: dw " Last Move: X"
 status: dw "ESC-->END"
 end_message: dw "Game has been ended"
@@ -41,7 +41,7 @@ note:
 	in al, 61h
 	or al, 00000011b
 	out 61h, al
-	mov bx, 2
+	mov bx, cx
 	.pause1:
 	mov cx, 65535
 	.pause2:
@@ -53,8 +53,8 @@ note:
 	and al, 11111100b
 	out 61h, al
 	pop bx
-	pop bx
-	ret
+	pop ax
+	ret 
 
 select_level:
 	ret
@@ -65,7 +65,7 @@ reset:
 	push di
 	push es
 	
-	mov word[x_snake_s], 17
+	mov word[x_snake_s], 25
 	mov word[y_snake_s], 2
 	mov word[x_snake_e], 13
 	mov word[y_snake_e], 2
@@ -74,7 +74,7 @@ reset:
 	mov word[score+7], 48
 	mov word[score+8], 48
 	mov word[score+9], 48
-	mov cx, 4
+	mov cx, 4+8
 	mov ax, 0xB800
 	mov es, ax
 	mov ax, word[x_snake_s]
@@ -271,48 +271,24 @@ update_back_pointer:
 	mov ax, word [es:di+2]
 	cmp ax, 0x03DC
 	je q1
-	cmp ax, 0x03B1
-	je q1
 	
 	;left
 	mov ax, word [es:di-2]
 	cmp ax, 0x03DC
 	je q2
-	cmp ax, 0x03B1
-	je q2
 	
 	;down
 	mov ax, word [es:di+160]
-	cmp ax, 0x03DC
-	je q3
 	cmp ax, 0x03B1
 	je q3
-	
 	
 	;up
 	mov ax, word [es:di-160]
-	cmp ax, 0x03DC
-	je q4
 	cmp ax, 0x03B1
 	je q4
 	
-	; ;bototm-right
-	; mov ax, word [es:di+162]
-	; cmp ax, 0x03DC
-	
-	; ;bottom-left
-	; mov ax, word [es:di+158]
-	; cmp ax, 0x03DC
-	
-	; ;top-right
-	; mov ax, word [es:di-158]
-	; cmp ax, 0x03DC
-	
-	; ;top-left
-	; mov ax, word [es:di-162]
-	; cmp ax, 0x03DC
-	
 	jmp cont6
+	
 	
 	q1:
 	add word[x_snake_e], 1
@@ -341,6 +317,7 @@ update_back_pointer:
 	
 update_score:
 	push ax
+	mov cx, 2
 	call note
 	mov al, byte[score+9]
 	cmp al, '9'
@@ -355,6 +332,8 @@ update_score:
 	mov byte[score+9], '0'
 	jmp label5
 	label4:
+	mov cx, 10
+	call note
 	add byte[score+7], 1
 	mov byte[score+8], '0'
 	mov byte[score+9], '0'
@@ -622,6 +601,7 @@ ending_message:
 	ret
 	
 end:
+	mov cx, 4
 	call note
 	call ending_message
 mov ax, 0x4C00
