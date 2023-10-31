@@ -14,7 +14,7 @@ level: dw 5
 move: dw " Last Move: X"
 status: dw "ESC-->END"
 end_message: dw "Game has been ended"
-r_message: 	dw "Press R to Restart  "
+r_message: 	dw "Press R to Restart   "
 score: dw "Score: 000"
 xy_fruit: dw 0
 x_fruit: dw 0
@@ -23,7 +23,6 @@ y_fruit: dw 0
 
 start:
 	call select_level
-	call select_color
 	call bg
 	mov ah, 0
 	int 0x10
@@ -58,18 +57,15 @@ note:
 	ret
 
 select_level:
-
 	ret
-select_color:
 	
-	ret
 reset:
 	push ax
 	push cx
 	push di
 	push es
 	
-	mov word[x_snake_s], 15
+	mov word[x_snake_s], 17
 	mov word[y_snake_s], 2
 	mov word[x_snake_e], 13
 	mov word[y_snake_e], 2
@@ -78,7 +74,7 @@ reset:
 	mov word[score+7], 48
 	mov word[score+8], 48
 	mov word[score+9], 48
-	mov cx, 2
+	mov cx, 4
 	mov ax, 0xB800
 	mov es, ax
 	mov ax, word[x_snake_s]
@@ -115,15 +111,11 @@ game:
 		jbe label1
 		
 		mov ax, [level]
-		; mov bx, 3
-		; sub ax, bx
 		push ax
 		jmp label2
 		
 		label1:
 			mov ax, [level]
-			; mov bx, 3
-			; sub ax, bx
 			shr ax, 1
 			push ax
 		label2:
@@ -258,20 +250,95 @@ snake:
 	ret
 
 update_back_pointer:
-	
-	add word[x_snake_e], 1
-	mov ax, word[x_snake_e]
 	push ax
-	mov ax, word[y_snake_e]
+	push bx
+	push cx
+	push dx
+	push si
+	push di
+	push es
+
+	mov ax, word[x_snake_e] 
 	push ax
-	mov ax, xy_snake_e
+	mov ax, word[y_snake_e] 
+	push ax
+	mov ax, xy_snake_e 
 	push ax
 	call get_cords
-	mov si, word[xy_snake_e]
+	mov di, word[xy_snake_e]
 	
-	mov word[es:si], 0x0720
+	;right
+	mov ax, word [es:di+2]
+	cmp ax, 0x03DC
+	je q1
+	cmp ax, 0x03B1
+	je q1
 	
+	;left
+	mov ax, word [es:di-2]
+	cmp ax, 0x03DC
+	je q2
+	cmp ax, 0x03B1
+	je q2
+	
+	;down
+	mov ax, word [es:di+160]
+	cmp ax, 0x03DC
+	je q3
+	cmp ax, 0x03B1
+	je q3
+	
+	
+	;up
+	mov ax, word [es:di-160]
+	cmp ax, 0x03DC
+	je q4
+	cmp ax, 0x03B1
+	je q4
+	
+	; ;bototm-right
+	; mov ax, word [es:di+162]
+	; cmp ax, 0x03DC
+	
+	; ;bottom-left
+	; mov ax, word [es:di+158]
+	; cmp ax, 0x03DC
+	
+	; ;top-right
+	; mov ax, word [es:di-158]
+	; cmp ax, 0x03DC
+	
+	; ;top-left
+	; mov ax, word [es:di-162]
+	; cmp ax, 0x03DC
+	
+	jmp cont6
+	
+	q1:
+	add word[x_snake_e], 1
+	jmp cont6
+	q2:
+	add word[x_snake_e], -1
+	jmp cont6
+	q3:
+	add word[y_snake_e], 1
+	jmp cont6
+	q4:
+	add word[y_snake_e], -1
+	
+	cont6:
+	mov word[es:di], 0x0720
+	
+	
+	pop es
+	pop di
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop ax
 	ret
+	
 update_score:
 	push ax
 	call note
