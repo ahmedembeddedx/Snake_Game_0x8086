@@ -17,16 +17,40 @@ end_message: dw "Game has been ended"
 r_message: 	dw "Press R to Restart   "
 score: dw "Score: 000"
 roll: dw " 22L-7503"
+
+inst1: dw "      ._____.   ._____.                             "
+inst2: dw "      |     |   |     |                             "
+inst3: dw "Press |  E  | & |  P  | to END/PAUSE                "
+inst4: dw "      .-----.   .-----.                             "
+
+inst5: dw "      ._____.   ._____.                             "
+inst6: dw "      |  ^  |   |  |  |                             "
+inst7: dw "Press |  |  | & |  v  | to move the snake UP/DOWN   "
+inst8: dw "      .-----.   .-----.                             "
+
+inst9:  dw "      ._____.   ._____.                             "
+inst10: dw "      |     |   |     |                             "
+inst11: dw "Press | <-  | & |  -> | to move the snake LEFT/RIGHT"
+inst12: dw "      .-----.   .-----.                             "
+
+inst13: dw "Press Any Key to CONTINUE                           "
+
+inst14:  dw "  _____ _   _          _  ________    _____          __  __ ______ "
+inst15:  dw " / ____| \ | |   /\   | |/ /  ____|  / ____|   /\   |  \/  |  ____|"
+inst16:  dw "| (___ |  \| |  /  \  | ' /| |__    | |  __   /  \  | \  / | |__   "
+inst17:  dw " \___ \| . ` | / /\ \ |  < |  __|   | | |_ | / /\ \ | |\/| |  __|  "
+inst18:  dw " ____) | |\  |/ ____ \| . \| |____  | |__| |/ ____ \| |  | | |____ "
+inst19:  dw "|_____/|_| \_/_/    \_\_|\_\______|  \_____/_/    \_\_|  |_|______|"
+
+
 xy_fruit: dw 0
 x_fruit: dw 0
 y_fruit: dw 0
 
 
 start:
-	call select_level
+	call first_screen
 	call bg
-	mov ah, 0
-	int 0x10
 	call game
 	jmp end
 
@@ -57,8 +81,74 @@ note:
 	pop ax
 	ret 
 
-select_level:
-	ret
+first_screen:
+	pusha
+	push es
+	
+	mov ax, 0xb800
+	mov es, ax
+	xor di, di
+	mov ax, 0x0720
+	mov cx, 2000
+	cld 
+	rep stosw
+	
+	
+	mov bp, inst1
+	mov ah, 0x13
+	mov al, 1 
+	mov bh, 0 
+	mov bl, 0x03
+	mov dh, 0x9
+	mov dl, 5
+	mov cx, 52
+	push cs 
+	pop es
+	int 0x10 
+	
+	l1: 
+	inc dh 
+	push cs 
+	pop es 
+	add bp, 52
+	int 0x10
+	cmp bp, 988
+	jbe l1
+	
+	
+	add bp, 52
+	mov bl, 0x0C
+	
+	mov dh, 0
+	mov cx, 67
+	inc dh 
+	push cs 
+	pop es 
+	int 0x10
+	l2:
+	inc dh 
+	push cs 
+	pop es 
+	add bp, 68
+	int 0x10 
+	cmp bp, 1328
+	jbe l2
+	
+	
+	mov dx, 0x1700
+	mov cx, 0
+	int 0x10 
+	mov ah, 0x0
+	
+	
+	
+	mov ah, 0x0
+	int 16h
+
+	
+	popa	
+	pop es
+	ret	
 	
 reset:
 	push ax
@@ -106,6 +196,9 @@ game:
 
 	call reset
 	call Genxy_fruit
+	mov ah, 0x0
+	int 16h
+
 	main:
 		call check_key
 		cmp word[ltmv], 1
@@ -236,7 +329,7 @@ snake:
 	cont5:
 	cmp word[ltmv], 1
 	jle i1
-	mov word[es:di], 0x03B1	
+	mov word[es:di], 0x03B2	
 	jmp i2
 	i1:
 	mov word[es:di], 0x03DC
@@ -289,15 +382,15 @@ update_back_pointer:
 	
 	;down
 	mov ax, word [es:di+160]
-	cmp ax, 0x03B1
+	cmp ax, 0x03B2
 	je q3
 	
 	;up
 	mov ax, word [es:di-160]
-	cmp ax, 0x03B1
+	cmp ax, 0x03B2
 	je q4
 	
-	jmp cont6
+	jmp end
 	
 	
 	q1:
@@ -413,7 +506,7 @@ bg:
 	mov cx, 2000
 	cld
 	rep stosw
-	mov ah, 0x0A
+	mov ah, 0x2A
 	mov al, 0xB1
 	
 	mov cx, 24
@@ -433,6 +526,7 @@ bg:
 	cld 
 	rep stosw
 	
+	mov ah, 0x2A
 	mov di, 840
 	mov cx, 40
 	cld 
@@ -450,6 +544,7 @@ bg:
 	mov cx, 40
 	cld 
 	rep stosw
+	
 	call info
 	pop es
 	pop di
