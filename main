@@ -16,6 +16,7 @@ status: dw "ESC-->END"
 end_message: dw "Game has been ended"
 r_message: 	dw "Press R to Restart   "
 score: dw "Score: 000"
+roll: dw " 22L-7503"
 xy_fruit: dw 0
 x_fruit: dw 0
 y_fruit: dw 0
@@ -151,6 +152,8 @@ check_key:
 	je down
 	cmp ah, 01h
 	je end
+	cmp ah, 39h
+	je _pause
 	jmp cont1
 
 left:
@@ -184,7 +187,13 @@ down:
 	mov word[ltmv], 3
 	mov word[move+12], 'D'
 	ret
-
+	
+_pause:
+	mov ah, 0x0
+	int 16h
+	cmp ah, 0x39
+	jne _pause
+	
 cont1:
 	cmp word[ltmv], 0
 	je left
@@ -481,6 +490,13 @@ info:
 	pop es 
 	mov bp, score
 	int 0x10 	
+	
+	mov dx, 0x1737
+	mov cx, 9
+	push cs 
+	pop es 
+	mov bp, roll
+	int 0x10 
 	
 	pop es
 	pop di
