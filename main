@@ -12,7 +12,7 @@ last_pos: dw 0
 ltmv: dw 1
 level: dw 4
 move: dw " Last Move: X"
-status: dw "ESC-->END"
+status: dw "E: END P: PAUSE"
 end_message: dw "Game has been ended"
 r_message: 	dw "Press R to Restart   "
 score: dw "Score: 000"
@@ -111,12 +111,12 @@ game:
 		cmp word[ltmv], 1
 		jbe label1
 		
-		mov ax, [level]
+		mov ax, 2
 		push ax
 		jmp label2
 		
 		label1:
-			mov ax, [level]
+			mov ax, 3
 			shr ax, 1
 			push ax
 		label2:
@@ -150,9 +150,9 @@ check_key:
 	je up
 	cmp ah, 50h
 	je down
-	cmp ah, 01h
+	cmp ah, 12h
 	je end
-	cmp ah, 39h
+	cmp ah, 19h
 	je _pause
 	jmp cont1
 
@@ -191,7 +191,8 @@ down:
 _pause:
 	mov ah, 0x0
 	int 16h
-	cmp ah, 0x39
+	cmp ah, 19h
+	mov word[move+12], 'P'
 	jne _pause
 	
 cont1:
@@ -478,13 +479,13 @@ info:
 	int 0x10 
 	
 	mov dx, 0x1715
-	mov cx, 9
+	mov cx, 15
 	push cs 
 	pop es 
 	mov bp, status
 	int 0x10 
 
-	mov dx, 0x1725
+	mov dx, 0x1729
 	mov cx, 10
 	push cs 
 	pop es 
