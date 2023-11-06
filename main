@@ -11,6 +11,10 @@ xy_snake_e: dw 0
 last_pos: dw 0
 ltmv: dw 1
 level: dw 4
+xy_fruit: dw 0
+x_fruit: dw 0
+y_fruit: dw 0
+
 iscrashed: dw 0
 move: dw " Last Move: X"
 status: dw "E: END P: PAUSE"
@@ -20,20 +24,19 @@ score: dw "Score: 000"
 roll: dw " 22L-7503"
 crashed: dw "Code Crashed"
 
-inst1: dw "      ._____.   ._____.                             "
-inst2: dw "      |     |   |     |                             "
-inst3: dw "Press |  E  | & |  P  | to END/PAUSE                "
-inst4: dw "      '-----'   '-----'                             "
+inst1: dw "    .------.        .------.                        "
+inst2: dw "    |  E   |        |  P   |                        "
+inst3: dw "    |      |        |      | to END/PAUSE           "
+inst4: dw "    '------'        '------'                        "
+inst5:  dw "            ______                                 "
+inst6:  dw "           |      |                                "
+inst7:  dw "   .______.|  /\  |.______.                        "
+inst8:  dw "   |      ||______||      |                        "
+inst9:  dw "   | <    |'------'|    > | to move snake L/R/U/D  "
+inst10: dw "   '------'|      |'------'                        "
+inst11: dw "           |  \/  |                                "
+inst12: dw "           '------'                                "
 
-inst5: dw "      ._____.   ._____.                             "
-inst6: dw "      |  ^  |   |  |  |                             "
-inst7: dw "Press |  |  | & |  v  | to move the snake UP/DOWN   "
-inst8: dw "      '-----'   '-----'                             "
-
-inst9:  dw "      ._____.   ._____.                             "
-inst10: dw "      |     |   |     |                             "
-inst11: dw "Press | <-  | & |  -> | to move the snake LEFT/RIGHT"
-inst12: dw "      '-----'   '-----'                             "
 
 inst13: dw "Press Any Key to CONTINUE                           "
 
@@ -45,9 +48,7 @@ inst18:  dw " ____) | |\  |/ ____ \| . \| |____  | |__| |/ ____ \| |  | | |____ 
 inst19:  dw "|_____/|_| \_/_/    \_\_|\_\______|  \_____/_/    \_\_|  |_|______|"
 
 
-xy_fruit: dw 0
-x_fruit: dw 0
-y_fruit: dw 0
+
 
 
 start:
@@ -133,7 +134,7 @@ first_screen:
 	pop es 
 	add bp, 68
 	int 0x10 
-	cmp bp, 1328
+	cmp bp, 1396
 	jbe l2
 	
 	
@@ -158,26 +159,19 @@ reset:
 	push di
 	push es
 	
-	mov word[x_snake_s], 35
+	mov word[x_snake_s], 17
 	mov word[y_snake_s], 2
 	mov word[x_snake_e], 13
 	mov word[y_snake_e], 2
-	
+	mov word[iscrashed], 0
 	mov word[ltmv], 1
 	mov word[score+7], 48
 	mov word[score+8], 48
 	mov word[score+9], 48
-	mov cx, 4+8+10
+	mov cx, 4
 	mov ax, 0xB800
 	mov es, ax
-	mov ax, word[x_snake_s]
-	push ax
-	mov ax, word[y_snake_s]
-	push ax
-	mov ax, xy_snake_s
-	push ax
-	call get_cords
-	mov di, word[xy_snake_s]
+	call calc_position_start
 	std
 	mov ax, 0x03DC
 	rep stosw
@@ -285,9 +279,10 @@ down:
 	
 _pause:
 	mov ah, 0x0
+	mov word[move+12], 'P'
+	call info
 	int 16h
 	cmp ah, 19h
-	mov word[move+12], 'P'
 	jne _pause
 	
 cont1:
@@ -310,14 +305,7 @@ snake:
 	mov es, ax
 	call info
 	
-	mov ax, word[x_snake_s]
-	push ax
-	mov ax, word[y_snake_s]
-	push ax
-	mov ax, xy_snake_s
-	push ax
-	call get_cords
-	mov di, word[xy_snake_s]
+	call calc_position_start
 	mov ax, [es:di]
 	mov word[last_pos], ax
 	
@@ -331,7 +319,7 @@ snake:
 	cont5:
 	cmp word[ltmv], 1
 	jle i1
-	mov word[es:di], 0x03B2	
+	mov word[es:di], 0x03DB	
 	jmp i2
 	i1:
 	mov word[es:di], 0x03DC
@@ -340,10 +328,18 @@ snake:
 	mov di, word[xy_fruit]
 	stosw
 	
+	
+	call calc_position_start
 	cmp word[last_pos], 0x0720
 	je cont4
 	cmp word[last_pos], 0x0CDC
 	je cont4
+	cmp word[ltmv], 3
+	je i3
+	mov word[es:di], 0x83DC 
+	jmp end
+	i3:
+	mov word[es:di], 0x83DF
 	jmp end
 	
 	
@@ -354,6 +350,16 @@ snake:
 	pop ax
 	ret
 
+calc_position_start:
+	mov ax, word[x_snake_s]
+	push ax
+	mov ax, word[y_snake_s]
+	push ax
+	mov ax, xy_snake_s
+	push ax
+	call get_cords
+	mov di, word[xy_snake_s]
+	ret
 update_back_pointer:
 	push ax
 	push bx
@@ -374,16 +380,16 @@ update_back_pointer:
 	
 	
 	cmp word[ltmv], 1
-	jbe j2
+	ja j2
 	j1:
 	;down
 	mov ax, word [es:di+160]
-	cmp ax, 0x03B2
+	cmp ax, 0x03DB
 	je q3
 	
 	;up
 	mov ax, word [es:di-160]
-	cmp ax, 0x03B2
+	cmp ax, 0x03DB
 	je q4
 	
 	j2:
@@ -399,12 +405,12 @@ update_back_pointer:
 	
 	;down
 	mov ax, word [es:di+160]
-	cmp ax, 0x03B2
+	cmp ax, 0x03DB
 	je q3
 	
 	;up
 	mov ax, word [es:di-160]
-	cmp ax, 0x03B2
+	cmp ax, 0x03DB
 	je q4
 
 	
@@ -611,7 +617,7 @@ info:
 	push cs 
 	pop es 
 	mov bp, roll
-	int 0x10 
+	int 0x10
 	
 	pop es
 	pop di
@@ -697,7 +703,7 @@ ending_message:
 	mov ah, 0x13
 	mov al, 1 
 	mov bh, 0 
-	mov bl, 0xEE
+	mov bl, 0x87
 	mov dh, 0x0A
 	cmp word[iscrashed], 1
 	jne cont7
@@ -749,5 +755,6 @@ end:
 	mov cx, 4
 	call note
 	call ending_message
+	
 mov ax, 0x4C00
 int 0x21
