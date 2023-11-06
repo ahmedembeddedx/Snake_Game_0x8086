@@ -11,27 +11,29 @@ xy_snake_e: dw 0
 last_pos: dw 0
 ltmv: dw 1
 level: dw 4
+iscrashed: dw 0
 move: dw " Last Move: X"
 status: dw "E: END P: PAUSE"
 end_message: dw "Game has been ended"
 r_message: 	dw "Press R to Restart   "
 score: dw "Score: 000"
 roll: dw " 22L-7503"
+crashed: dw "Code Crashed"
 
 inst1: dw "      ._____.   ._____.                             "
 inst2: dw "      |     |   |     |                             "
 inst3: dw "Press |  E  | & |  P  | to END/PAUSE                "
-inst4: dw "      .-----.   .-----.                             "
+inst4: dw "      '-----'   '-----'                             "
 
 inst5: dw "      ._____.   ._____.                             "
 inst6: dw "      |  ^  |   |  |  |                             "
 inst7: dw "Press |  |  | & |  v  | to move the snake UP/DOWN   "
-inst8: dw "      .-----.   .-----.                             "
+inst8: dw "      '-----'   '-----'                             "
 
 inst9:  dw "      ._____.   ._____.                             "
 inst10: dw "      |     |   |     |                             "
 inst11: dw "Press | <-  | & |  -> | to move the snake LEFT/RIGHT"
-inst12: dw "      .-----.   .-----.                             "
+inst12: dw "      '-----'   '-----'                             "
 
 inst13: dw "Press Any Key to CONTINUE                           "
 
@@ -156,7 +158,7 @@ reset:
 	push di
 	push es
 	
-	mov word[x_snake_s], 25
+	mov word[x_snake_s], 35
 	mov word[y_snake_s], 2
 	mov word[x_snake_e], 13
 	mov word[y_snake_e], 2
@@ -165,7 +167,7 @@ reset:
 	mov word[score+7], 48
 	mov word[score+8], 48
 	mov word[score+9], 48
-	mov cx, 4+8
+	mov cx, 4+8+10
 	mov ax, 0xB800
 	mov es, ax
 	mov ax, word[x_snake_s]
@@ -204,12 +206,12 @@ game:
 		cmp word[ltmv], 1
 		jbe label1
 		
-		mov ax, 2
+		mov ax, [level]
 		push ax
 		jmp label2
 		
 		label1:
-			mov ax, 3
+			mov ax, [level]
 			shr ax, 1
 			push ax
 		label2:
@@ -370,6 +372,21 @@ update_back_pointer:
 	call get_cords
 	mov di, word[xy_snake_e]
 	
+	
+	cmp word[ltmv], 1
+	jbe j2
+	j1:
+	;down
+	mov ax, word [es:di+160]
+	cmp ax, 0x03B2
+	je q3
+	
+	;up
+	mov ax, word [es:di-160]
+	cmp ax, 0x03B2
+	je q4
+	
+	j2:
 	;right
 	mov ax, word [es:di+2]
 	cmp ax, 0x03DC
@@ -389,7 +406,9 @@ update_back_pointer:
 	mov ax, word [es:di-160]
 	cmp ax, 0x03B2
 	je q4
+
 	
+	mov word[iscrashed], 1
 	jmp end
 	
 	
@@ -679,7 +698,18 @@ ending_message:
 	mov al, 1 
 	mov bh, 0 
 	mov bl, 0xEE
-	mov dh, 0x0A 
+	mov dh, 0x0A
+	cmp word[iscrashed], 1
+	jne cont7
+	mov dl, 30
+	mov cx, 12
+	push cs 
+	pop es 
+	mov bp, crashed
+	int 0x10 
+	jmp cont8
+	
+	cont7:
 	mov dl, 30
 	mov cx, 19
 	push cs 
@@ -699,6 +729,9 @@ ending_message:
 	pop es 
 	mov bp, score
 	int 0x10 
+
+	
+	cont8:
 	mov dx, 0x1700
 	mov cx, 0
 	int 0x10 
