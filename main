@@ -9,11 +9,14 @@ x_snake_e: dw 0
 y_snake_e: dw 0
 xy_snake_e: dw 0
 last_pos: dw 0
-ltmv: dw 1
+ltmv_s: dw 1
+ltmv_e: dw 1
+
 level: dw 4
-xy_fruit: dw 0
-x_fruit: dw 0
-y_fruit: dw 0
+xy_fruit_s: dw 0
+x_fruit_s: dw 0
+y_fruit_s: dw 0
+
 
 iscrashed: dw 0
 move: dw " Last Move: X"
@@ -101,9 +104,9 @@ first_screen:
 	mov ah, 0x13
 	mov al, 1 
 	mov bh, 0 
-	mov bl, 0x03
+	mov bl, 0x0A
 	mov dh, 0x9
-	mov dl, 5
+	mov dl, 16
 	mov cx, 52
 	push cs 
 	pop es
@@ -115,13 +118,18 @@ first_screen:
 	pop es 
 	add bp, 52
 	int 0x10
-	cmp bp, 988
+	cmp bp, 936
 	jbe l1
-	
+	mov dl, 50
+	add dh, 4
+	push cs 
+	pop es 
+	add bp, 52
+	int 0x10
 	
 	add bp, 52
 	mov bl, 0x0C
-	
+	mov dl, 5
 	mov dh, 0
 	mov cx, 67
 	inc dh 
@@ -143,12 +151,9 @@ first_screen:
 	int 0x10 
 	mov ah, 0x0
 	
-	
-	
 	mov ah, 0x0
 	int 16h
 
-	
 	popa	
 	pop es
 	ret	
@@ -159,16 +164,16 @@ reset:
 	push di
 	push es
 	
-	mov word[x_snake_s], 17
+	mov word[x_snake_s], 17+18
 	mov word[y_snake_s], 2
 	mov word[x_snake_e], 13
 	mov word[y_snake_e], 2
 	mov word[iscrashed], 0
-	mov word[ltmv], 1
+	mov word[ltmv_s], 1
 	mov word[score+7], 48
 	mov word[score+8], 48
 	mov word[score+9], 48
-	mov cx, 4
+	mov cx, 4+18
 	mov ax, 0xB800
 	mov es, ax
 	call calc_position_start
@@ -191,13 +196,13 @@ game:
 	push es
 
 	call reset
-	call Genxy_fruit
+	call Genxy_fruit_s
 	mov ah, 0x0
 	int 16h
 
 	main:
 		call check_key
-		cmp word[ltmv], 1
+		cmp word[ltmv_s], 1
 		jbe label1
 		
 		mov ax, [level]
@@ -246,34 +251,35 @@ check_key:
 	jmp cont1
 
 left:
-	cmp word[ltmv], 1
+	cmp word[ltmv_s], 1
 	je cont1
 	add word[x_snake_s], -1
-	mov word[ltmv], 0
+	mov word[ltmv_s], 0
 	mov word[move+12], 'L'
 	ret
  
 right:
-	cmp word[ltmv], 0
+	
+	cmp word[ltmv_s], 0
 	je cont1
 	add word[x_snake_s], 1
-	mov word[ltmv], 1
+	mov word[ltmv_s], 1
 	mov word[move+12], 'R'
 	ret
 
 up:
-	cmp word[ltmv], 3
+	cmp word[ltmv_s], 3
 	je cont1
 	add word[y_snake_s], -1
-	mov word[ltmv], 2
+	mov word[ltmv_s], 2
 	mov word[move+12], 'U'
 	ret
 
 down:
-	cmp word[ltmv], 2
+	cmp word[ltmv_s], 2
 	je cont1
 	add word[y_snake_s], 1
-	mov word[ltmv], 3
+	mov word[ltmv_s], 3
 	mov word[move+12], 'D'
 	ret
 	
@@ -286,13 +292,13 @@ _pause:
 	jne _pause
 	
 cont1:
-	cmp word[ltmv], 0
+	cmp word[ltmv_s], 0
 	je left
-	cmp word[ltmv], 1
+	cmp word[ltmv_s], 1
 	je right
-	cmp word[ltmv], 2
+	cmp word[ltmv_s], 2
 	je up
-	cmp word[ltmv], 3
+	cmp word[ltmv_s], 3
 	je down
 	ret
 
@@ -317,7 +323,7 @@ snake:
 	cont3:
 	call update_score
 	cont5:
-	cmp word[ltmv], 1
+	cmp word[ltmv_s], 1
 	jle i1
 	mov word[es:di], 0x03DB	
 	jmp i2
@@ -325,7 +331,7 @@ snake:
 	mov word[es:di], 0x03DC
 	i2:
 	mov ax, 0x0CDC
-	mov di, word[xy_fruit]
+	mov di, word[xy_fruit_s]
 	stosw
 	
 	
@@ -334,7 +340,7 @@ snake:
 	je cont4
 	cmp word[last_pos], 0x0CDC
 	je cont4
-	cmp word[ltmv], 3
+	cmp word[ltmv_s], 3
 	je i3
 	mov word[es:di], 0x83DC 
 	jmp end
@@ -379,7 +385,7 @@ update_back_pointer:
 	mov di, word[xy_snake_e]
 	
 	
-	cmp word[ltmv], 1
+	cmp word[ltmv_s], 1
 	ja j2
 	j1:
 	;down
@@ -404,7 +410,7 @@ update_back_pointer:
 	je q2
 	
 	;down
-	mov ax, word [es:di+160]
+	mov ax, word [es:di+160] 
 	cmp ax, 0x03DB
 	je q3
 	
@@ -467,7 +473,7 @@ update_score:
 	mov byte[score+9], '0'
 
 	label5:
-	call Genxy_fruit
+	call Genxy_fruit_s
 	pop ax
 	ret 
 	
@@ -629,7 +635,7 @@ info:
 	pop bp
 	ret
 	
-Genxy_fruit:
+Genxy_fruit_s:
 
 	push cx
 	push ax
@@ -642,14 +648,14 @@ Genxy_fruit:
 	
 	l4:
 	call GenRandCoords
-	mov ax, word[x_fruit]
+	mov ax, word[x_fruit_s]
 	push ax
-	mov ax, word[y_fruit]
+	mov ax, word[y_fruit_s]
 	push ax
-	mov ax, xy_fruit
+	mov ax, xy_fruit_s
 	push ax
 	call get_cords
-	mov di, word[xy_fruit]
+	mov di, word[xy_fruit_s]
 	mov ax, [es:di]
 	cmp ax, 0x0720
 	je cont2
@@ -679,7 +685,7 @@ GenRandCoords:
 	shl dx, 1
 	add dx, 3
 	
-	mov word[x_fruit],dx
+	mov word[x_fruit_s],dx
 	
 	mov ah, 0x00
 	int 0x1A 
@@ -692,7 +698,7 @@ GenRandCoords:
 	shl dx, 1
 	add dx, 2
 	
-	mov word[y_fruit],dx
+	mov word[y_fruit_s],dx
 	
 	pop dx
 	pop ax
