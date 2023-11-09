@@ -33,9 +33,8 @@ Before you can run the game, you'll need an environment that supports running As
 5. Run the game by executing the generated executable.
 
 ```bash
-tasm snake.asm
-tlink snake.obj
-snake.exe
+nasm main.asm -o main.com -l main.lst
+main.com
 ```
 
 6. Enjoy playing the Snake game! Use the arrow keys to control the snake's movement.
