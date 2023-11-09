@@ -9,23 +9,28 @@ x_snake_e: dw 0
 y_snake_e: dw 0
 xy_snake_e: dw 0
 last_pos: dw 0
-ltmv_s: dw 1
+ltmv_s: dw 1 
 ltmv_e: dw 1
 
-level: dw 4
+
+level: dw 6
 xy_fruit_s: dw 0
 x_fruit_s: dw 0
 y_fruit_s: dw 0
 
+curr: db 1
+m1:	db 'START', 0
+m2: db 'LEAVE', 0
 
 iscrashed: dw 0
 move: dw " Last Move: X"
 status: dw "E: END P: PAUSE"
 end_message: dw "Game has been ended"
-r_message: 	dw "Press R to Restart   "
+r_message: 	dw "Press R to Restart "
 score: dw "Score: 000"
 roll: dw " 22L-7503"
 crashed: dw "Code Crashed"
+
 
 inst1: dw "    .------.        .------.                        "
 inst2: dw "    |  E   |        |  P   |                        "
@@ -40,8 +45,7 @@ inst10: dw "   '------'|      |'------'                        "
 inst11: dw "           |  \/  |                                "
 inst12: dw "           '------'                                "
 
-
-inst13: dw "Press Any Key to CONTINUE                           "
+inst13: dw "                                                    "
 
 inst14:  dw "  _____ _   _          _  ________    _____          __  __ ______ "
 inst15:  dw " / ____| \ | |   /\   | |/ /  ____|  / ____|   /\   |  \/  |  ____|"
@@ -53,12 +57,13 @@ inst19:  dw "|_____/|_| \_/_/    \_\_|\_\______|  \_____/_/    \_\_|  |_|______|
 
 
 
-
 start:
 	call first_screen
+	;call show_menu
 	call bg
 	call game
 	jmp end
+
 
 note:
 	push ax
@@ -87,9 +92,8 @@ note:
 	pop ax
 	ret 
 
-first_screen:
+clrscreen:
 	pusha
-	push es
 	
 	mov ax, 0xb800
 	mov es, ax
@@ -100,13 +104,59 @@ first_screen:
 	rep stosw
 	
 	
+	popa
+	ret
+
+show_menu:
+	pusha
+	start_loop:
+		call menu
+		mov ah, 0
+		int 0x16
+		cmp ah, 0x48
+
+		jne l_nextcmp
+		mov byte[curr], 1
+		jmp l_skip
+
+		l_nextcmp:
+			cmp ah, 0x50
+			jne l_nextcmp1
+
+		mov byte[curr], 2
+		jmp l_skip
+		
+		l_nextcmp1:
+			cmp ah, 0x1c
+			jne l_skip
+
+		jmp l_next
+		l_skip:
+			jmp start_loop
+
+	l_next:
+		cmp byte[curr], 2
+		je l5
+		jmp l6
+		l5:
+		call clrscreen
+		jmp end
+		l6:		
+	popa
+	ret
+first_screen:
+	pusha
+	push es
+	
+	call clrscreen
+	
 	mov bp, inst1
 	mov ah, 0x13
 	mov al, 1 
 	mov bh, 0 
 	mov bl, 0x0A
 	mov dh, 0x9
-	mov dl, 16
+	mov dl, 5
 	mov cx, 52
 	push cs 
 	pop es
@@ -151,12 +201,12 @@ first_screen:
 	int 0x10 
 	mov ah, 0x0
 	
-	mov ah, 0x0
-	int 16h
-
+	call show_menu
+	call clrscreen
 	popa	
 	pop es
 	ret	
+	
 	
 reset:
 	push ax
@@ -230,12 +280,18 @@ game:
 
 
 check_key:
+
 	mov ah, 0x1
 	int 16h
 	jz cont1
 	mov ah, 0x0
 	int 16h
 	
+	
+	cmp ah, 12h
+	je end
+	cmp ah, 19h
+	je _pause
 	cmp ah, 4Bh
 	je left
 	cmp ah, 4Dh
@@ -244,10 +300,7 @@ check_key:
 	je up
 	cmp ah, 50h
 	je down
-	cmp ah, 12h
-	je end
-	cmp ah, 19h
-	je _pause
+
 	jmp cont1
 
 left:
@@ -259,7 +312,7 @@ left:
 	ret
  
 right:
-	
+
 	cmp word[ltmv_s], 0
 	je cont1
 	add word[x_snake_s], 1
@@ -334,7 +387,6 @@ snake:
 	mov di, word[xy_fruit_s]
 	stosw
 	
-	
 	call calc_position_start
 	cmp word[last_pos], 0x0720
 	je cont4
@@ -357,6 +409,7 @@ snake:
 	ret
 
 calc_position_start:
+	push ax
 	mov ax, word[x_snake_s]
 	push ax
 	mov ax, word[y_snake_s]
@@ -365,6 +418,7 @@ calc_position_start:
 	push ax
 	call get_cords
 	mov di, word[xy_snake_s]
+	pop ax
 	ret
 update_back_pointer:
 	push ax
@@ -703,6 +757,55 @@ GenRandCoords:
 	pop dx
 	pop ax
 	pop cx
+	ret
+
+menu:
+	pusha
+	push 0xB800
+	pop es
+
+	cmp byte[curr], 1
+	jne m_cmp2
+
+	mov ah, 0xEE
+	jmp m_p1
+	m_cmp2:
+	mov ah, 0xEE
+	jmp m_p2
+
+	m_p1:
+		mov si, 2050
+		mov di, 0
+			
+	m_l1:
+	mov al, [m1 + di]
+		mov word[es:si], ax
+		add si, 2
+		inc di
+		cmp byte[m1 + di], 0
+		jne m_l1
+
+	cmp byte[curr], 2
+	je m_exit
+
+	mov ah, 0x07
+	m_p2:
+		mov si, 2370
+	 	mov di, 0
+	m_l2:
+		mov al, [m2 + di]
+		mov word[es:si], ax
+		add si, 2
+		inc di
+		cmp byte[m2 + di], 0
+		jne m_l2
+
+	mov ah, 0x07
+	cmp byte[curr], 2
+	je m_p1
+
+	m_exit:
+	popa
 	ret
 
 ending_message:
