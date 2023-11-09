@@ -19,8 +19,8 @@ x_fruit_s: dw 0
 y_fruit_s: dw 0
 
 curr: db 1
-m1:	db 'START', 0
-m2: db 'LEAVE', 0
+m1:	db ' START  GAME ', 0
+m2: db ' LEAVE ', 0
 
 iscrashed: dw 0
 move: dw " Last Move: X"
@@ -774,7 +774,7 @@ menu:
 	jmp m_p2
 
 	m_p1:
-		mov si, 2050
+		mov si, 2046
 		mov di, 0
 			
 	m_l1:
@@ -790,7 +790,7 @@ menu:
 
 	mov ah, 0x07
 	m_p2:
-		mov si, 2370
+		mov si, 2372
 	 	mov di, 0
 	m_l2:
 		mov al, [m2 + di]
