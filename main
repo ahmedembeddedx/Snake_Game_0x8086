@@ -13,7 +13,7 @@ ltmv_s: dw 1
 ltmv_e: dw 1
 
 
-level: dw 6
+level: dw 4
 xy_fruit_s: dw 0
 x_fruit_s: dw 0
 y_fruit_s: dw 0
@@ -32,10 +32,10 @@ roll: dw " 22L-7503"
 crashed: dw "Code Crashed"
 
 
-inst1: dw "    .------.        .------.                        "
-inst2: dw "    |  E   |        |  P   |                        "
-inst3: dw "    |      |        |      | to END/PAUSE           "
-inst4: dw "    '------'        '------'                        "
+inst1: dw "   .------.        .------.                        "
+inst2: dw "   |  E   |        |  P   |                        "
+inst3: dw "   |      |        |      | to END/PAUSE           "
+inst4: dw "   '------'        '------'                        "
 inst5:  dw "            ______                                 "
 inst6:  dw "           |      |                                "
 inst7:  dw "   .______.|  /\  |.______.                        "
@@ -47,19 +47,20 @@ inst12: dw "           '------'                                "
 
 inst13: dw "                                                    "
 
-inst14:  dw "  _____ _   _          _  ________    _____          __  __ ______ "
-inst15:  dw " / ____| \ | |   /\   | |/ /  ____|  / ____|   /\   |  \/  |  ____|"
-inst16:  dw "| (___ |  \| |  /  \  | ' /| |__    | |  __   /  \  | \  / | |__   "
-inst17:  dw " \___ \| . ` | / /\ \ |  < |  __|   | | |_ | / /\ \ | |\/| |  __|  "
-inst18:  dw " ____) | |\  |/ ____ \| . \| |____  | |__| |/ ____ \| |  | | |____ "
-inst19:  dw "|_____/|_| \_/_/    \_\_|\_\______|  \_____/_/    \_\_|  |_|______|"
+inst14:  dw " ___       __    _   ___     __   __  _  _  ___                     "
+inst15:  dw "[__  |\ | |__| |_/  |___    | _  |__| |\/| |___                     "
+inst16:  dw "___] | \| |  | | \  |___    |__] |  | |  | |___                     "
+inst17:  dw "-----------------------------------------------                     "
+
+
+
+
 
 
 
 
 start:
 	call first_screen
-	;call show_menu
 	call bg
 	call game
 	jmp end
@@ -154,7 +155,7 @@ first_screen:
 	mov ah, 0x13
 	mov al, 1 
 	mov bh, 0 
-	mov bl, 0x0A
+	mov bl, 0x0E
 	mov dh, 0x9
 	mov dl, 5
 	mov cx, 52
@@ -178,9 +179,9 @@ first_screen:
 	int 0x10
 	
 	add bp, 52
-	mov bl, 0x0C
-	mov dl, 5
-	mov dh, 0
+	mov bl, 0x06
+	mov dl, 17
+	mov dh, 1
 	mov cx, 67
 	inc dh 
 	push cs 
@@ -192,7 +193,7 @@ first_screen:
 	pop es 
 	add bp, 68
 	int 0x10 
-	cmp bp, 1396
+	cmp bp, 1260
 	jbe l2
 	
 	
@@ -214,7 +215,7 @@ reset:
 	push di
 	push es
 	
-	mov word[x_snake_s], 17+18
+	mov word[x_snake_s], 17
 	mov word[y_snake_s], 2
 	mov word[x_snake_e], 13
 	mov word[y_snake_e], 2
@@ -223,12 +224,12 @@ reset:
 	mov word[score+7], 48
 	mov word[score+8], 48
 	mov word[score+9], 48
-	mov cx, 4+18
+	mov cx, 4
 	mov ax, 0xB800
 	mov es, ax
 	call calc_position_start
 	std
-	mov ax, 0x03DC
+	mov ax, 0x0EDC
 	rep stosw
 	
 	pop es
@@ -237,12 +238,7 @@ reset:
 	pop ax
 	ret
 game:
-	push ax
-	push bx
-	push cx
-	push dx
-	push si
-	push di
+	pusha
 	push es
 
 	call reset
@@ -270,12 +266,7 @@ game:
 	jmp main
 
 	pop es
-	pop di
-	pop si
-	pop dx
-	pop cx
-	pop bx
-	pop ax
+	popa
 	ret
 
 
@@ -378,10 +369,10 @@ snake:
 	cont5:
 	cmp word[ltmv_s], 1
 	jle i1
-	mov word[es:di], 0x03DB	
+	mov word[es:di], 0x0EDB	
 	jmp i2
 	i1:
-	mov word[es:di], 0x03DC
+	mov word[es:di], 0x0EDC
 	i2:
 	mov ax, 0x0CDC
 	mov di, word[xy_fruit_s]
@@ -444,33 +435,33 @@ update_back_pointer:
 	j1:
 	;down
 	mov ax, word [es:di+160]
-	cmp ax, 0x03DB
+	cmp ax, 0x0EDB
 	je q3
 	
 	;up
 	mov ax, word [es:di-160]
-	cmp ax, 0x03DB
+	cmp ax, 0x0EDB
 	je q4
 	
 	j2:
 	;right
 	mov ax, word [es:di+2]
-	cmp ax, 0x03DC
+	cmp ax, 0x0EDC
 	je q1
 	
 	;left
 	mov ax, word [es:di-2]
-	cmp ax, 0x03DC
+	cmp ax, 0x0EDC
 	je q2
 	
 	;down
 	mov ax, word [es:di+160] 
-	cmp ax, 0x03DB
+	cmp ax, 0x0EDB
 	je q3
 	
 	;up
 	mov ax, word [es:di-160]
-	cmp ax, 0x03DB
+	cmp ax, 0x0EDB
 	je q4
 
 	
@@ -591,7 +582,7 @@ bg:
 	mov cx, 2000
 	cld
 	rep stosw
-	mov ah, 0x2A
+	mov ah, 0x06
 	mov al, 0xB1
 	
 	mov cx, 24
@@ -611,7 +602,7 @@ bg:
 	cld 
 	rep stosw
 	
-	mov ah, 0x2A
+	mov ah, 0x06
 	mov di, 840
 	mov cx, 40
 	cld 
@@ -638,19 +629,13 @@ bg:
 	ret
 	
 info:
-	push bp
-	push ax
-	push bx
-	push cx
-	push dx
-	push si
-	push di
+	pusha
 	push es
 	
 	mov ah, 0x13
 	mov al, 1 
 	mov bh, 0 
-	mov bl, 0xF
+	mov bl, 0x0E
 	mov dx, 0x1701 
 	mov cx, 13
 	push cs 
@@ -680,13 +665,7 @@ info:
 	int 0x10
 	
 	pop es
-	pop di
-	pop si
-	pop dx
-	pop cx
-	pop bx
-	pop ax
-	pop bp
+	popa
 	ret
 	
 Genxy_fruit_s:
@@ -788,7 +767,7 @@ menu:
 	cmp byte[curr], 2
 	je m_exit
 
-	mov ah, 0x07
+	mov ah, 0x0E
 	m_p2:
 		mov si, 2372
 	 	mov di, 0
@@ -800,7 +779,7 @@ menu:
 		cmp byte[m2 + di], 0
 		jne m_l2
 
-	mov ah, 0x07
+	mov ah, 0x0E
 	cmp byte[curr], 2
 	je m_p1
 
@@ -812,7 +791,7 @@ ending_message:
 	mov ah, 0x13
 	mov al, 1 
 	mov bh, 0 
-	mov bl, 0x87
+	mov bl, 0x8E
 	mov dh, 0x0A
 	cmp word[iscrashed], 1
 	jne cont7
