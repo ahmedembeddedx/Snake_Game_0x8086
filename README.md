@@ -1,5 +1,3 @@
-Certainly! Here's a sample README.md for your Snake game written in Assembly 8086:
-
 # Snake Game in Assembly 8086
 
 This is a simple Snake game implemented in Assembly 8086. It's a classic arcade game where the player controls a snake that moves around the screen, eating food and growing longer. The objective is to grow the snake as long as possible without colliding with the boundaries of the game or itself.
