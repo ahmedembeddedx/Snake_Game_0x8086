@@ -26,7 +26,7 @@ iscrashed: dw 0
 move: dw " LAST MOVE: X"
 status: dw "E: END P: PAUSE" 
 end_message: dw "GAME HAS BEEN ENDED"
-r_message: 	dw "PRESS 'Q' TO QUIT  "
+
 score: dw "SCORE: 000"
 
 roll: dw " 22L-7503"
@@ -54,8 +54,9 @@ inst16:  dw "___] | \| |  | | \  |___    |__] |  | |  | |___                    
 inst17:  dw "-----------------------------------------------                     "
 
 level_: dw "LEVEL: 1"
-
-
+game_: dw "SNAKE"
+r_message_1: dw "PRESS 'Q' TO QUIT  "
+r_message_2: dw "PRESS 'M' FOR MAIN MENU"
 
 
 
@@ -659,7 +660,7 @@ info:
 	mov ah, 0x13
 	mov al, 1 
 	mov bh, 0 
-	mov bl, 0x0E
+	mov bl, 0x6E
 	mov dx, 0x1701 
 	mov cx, 13
 	push cs 
@@ -667,28 +668,35 @@ info:
 	mov bp, move
 	int 0x10 
 	
-	mov dx, 0x1715
+	mov dx, 0x1710
 	mov cx, 15
 	push cs 
 	pop es 
 	mov bp, status
 	int 0x10 
-
-	mov dx, 0x1729
+	mov bl, 0x0E
+	mov dx, 0x1725
+	mov cx, 5
+	push cs 
+	pop es 
+	mov bp, game_
+	int 0x10 
+	mov bl, 0x6E
+	mov dx, 0x1730
 	mov cx, 10
 	push cs 
 	pop es 
 	mov bp, score
 	int 0x10 	
 	
-	mov dx, 0x1737
+	mov dx, 0x173C
 	mov cx, 8
 	push cs 
 	pop es 
 	mov bp, level_
 	int 0x10
 	
-	mov dx, 0x1741
+	mov dx, 0x1746
 	mov cx, 9
 	push cs 
 	pop es 
@@ -842,12 +850,19 @@ ending_message:
 	mov bp, end_message
 	int 0x10 
 	mov dh, 0x0C 
-	mov dl, 30
+	mov dl, 31
+	push cs  
+	pop es 
+	mov bp, r_message_1
+	int 0x10 
+	mov dh, 0x0D
+	mov cx, 23
+	mov dl, 28
 	push cs 
 	pop es 
-	mov bp, r_message
+	mov bp, r_message_2
 	int 0x10 
-	mov dh, 0x0D 
+	mov dh, 0x0E 
 	mov dl, 35
 	mov cx, 10
 	push cs 
@@ -860,15 +875,21 @@ ending_message:
 	mov dx, 0x1700
 	mov cx, 0
 	int 0x10 
-	mov ah, 0x0
 	
+	h2:
+	mov ah, 0x0
 	int 16h
 	cmp ah, 0x10
-	jne h1
-	ret
-	h1:
+	je h1
+	cmp ah, 0x32
+	je h3
+	jne h2
+	
+	h3:
 	jmp start
+	h1:
 	ret
+
 	
 end:
 	mov cx, 4
