@@ -93,7 +93,7 @@ note:
 	out 61h, al
 	pop bx
 	pop ax
-	ret 
+	ret
 
 clrscreen:
 	pusha
@@ -226,9 +226,9 @@ reset:
 	mov word[y_snake_e], 2
 	mov word[iscrashed], 0
 	mov word[ltmv_s], 1
-	mov word[score+7], 48
-	mov word[score+8], 48
-	mov word[score+9], 48
+	mov word[score+7], '0'
+	mov word[score+8], '0'
+	mov word[score+9], '0'
 	mov cx, 4
 	mov ax, 0xB800
 	mov es, ax
@@ -257,6 +257,7 @@ game:
 		jbe label1
 		
 		mov ax, [level]
+		sub ax, 2
 		push ax
 		jmp label2
 		
@@ -282,7 +283,6 @@ check_key:
 	jz cont1
 	mov ah, 0x0
 	int 16h
-	
 	
 	cmp ah, 12h
 	je end
@@ -388,6 +388,8 @@ snake:
 	je cont4
 	cmp word[last_pos], 0x0CDC
 	je cont4
+
+	
 	cmp word[ltmv_s], 3
 	je i3
 	mov word[es:di], 0x83DC 
@@ -424,7 +426,7 @@ update_back_pointer:
 	push si
 	push di
 	push es
-
+	
 	mov ax, word[x_snake_e] 
 	push ax
 	mov ax, word[y_snake_e] 
@@ -433,22 +435,24 @@ update_back_pointer:
 	push ax
 	call get_cords
 	mov di, word[xy_snake_e]
+		
 	
+	cmp word[es:di], 0x0EDC
+	je w2
 	
-	; cmp word[ltmv_s], 1
-	; ja j2
-	; j1:
-	; ;down
-	; mov ax, word [es:di+160]
-	; cmp ax, 0x0EDB
-	; je q3
+	w1:
+	;down
+	mov ax, word [es:di+160] 
+	cmp ax, 0x0EDB
+	je q3
 	
-	; ;up
-	; mov ax, word [es:di-160]
-	; cmp ax, 0x0EDB
-	; je q4
-	
-	; j2:
+	;up
+	mov ax, word [es:di-160]
+	cmp ax, 0x0EDB
+	je q4
+
+
+	w2:
 	;right
 	mov ax, word [es:di+2]
 	cmp ax, 0x0EDC
@@ -469,7 +473,7 @@ update_back_pointer:
 	cmp ax, 0x0EDB
 	je q4
 
-	
+	w3:
 	mov word[iscrashed], 1
 	jmp end
 	
@@ -636,7 +640,15 @@ bg:
 	mov cx, 40
 	cld 
 	rep stosw
+	mov di, 1160
+	mov cx, 40
+	cld 
+	rep stosw
 	
+	mov di, 2280
+	mov cx, 40
+	cld 
+	rep stosw
 	mov di, 2440
 	mov cx, 40
 	cld 
@@ -841,6 +853,7 @@ ending_message:
 	mov bp, crashed
 	int 0x10 
 	jmp cont8
+	
 	
 	cont7:
 	mov dl, 30
