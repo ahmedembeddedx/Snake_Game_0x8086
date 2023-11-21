@@ -9,8 +9,8 @@ x_snake_e: dw 0
 y_snake_e: dw 0
 xy_snake_e: dw 0
 last_pos: dw 0
-ltmv_s: dw 1 
-ltmv_e: dw 1
+ltmv_s: dw 1
+
 
 
 level: dw 9
@@ -30,7 +30,7 @@ end_message: dw "GAME HAS BEEN ENDED"
 score: dw "SCORE: 000"
 
 roll: dw " 22L-7503"
-crashed: dw "CODE CRASHED"
+crashed: dw "CODE CRASHED DUE TO UNEXPECTED PROBLEM"
 
 
 inst1: dw "   .------.        .------.                        "
@@ -48,17 +48,16 @@ inst12: dw "           '------'                                "
 
 inst13: dw "                                                    "
 
-inst14:  dw " ___       __    _   ___     __   __  _  _  ___                     "
-inst15:  dw "[__  |\ | |__| |_/  |___    | _  |__| |\/| |___                     "
-inst16:  dw "___] | \| |  | | \  |___    |__] |  | |  | |___                     "
-inst17:  dw "-----------------------------------------------                     "
+inst14:  dw " ___       __    _   ___     __   __  _  _  ___                __   "
+inst15:  dw "[__  |\ | |__| |_/  |___    | _  |__| |\/| |___       ____    /*_>-<"
+inst16:  dw "___] | \| |  | | \  |___    |__] |  | |  | |___   ___/ __ \__/ /    "
+inst17:  dw "-----------------------------------------------  <____/  \____/     "
 
+ltmv_e: dw 1
 level_: dw "LEVEL: 1"
 game_: dw "SNAKE"
 r_message_1: dw "PRESS 'Q' TO QUIT  "
 r_message_2: dw "PRESS 'M' FOR MAIN MENU"
-
-
 
 
 start:
@@ -183,7 +182,7 @@ first_screen:
 	
 	add bp, 52
 	mov bl, 0x06
-	mov dl, 17
+	mov dl, 9
 	mov dh, 1
 	mov cx, 67
 	inc dh 
@@ -211,7 +210,6 @@ first_screen:
 	pop es
 	ret	
 	
-	
 reset:
 	push ax
 	push cx
@@ -220,7 +218,7 @@ reset:
 	mov word[level], 9
 	mov byte[level_+7], '1'
 	
-	mov word[x_snake_s], 17
+	mov word[x_snake_s], 17+20
 	mov word[y_snake_s], 2
 	mov word[x_snake_e], 13
 	mov word[y_snake_e], 2
@@ -229,7 +227,7 @@ reset:
 	mov word[score+7], '0'
 	mov word[score+8], '0'
 	mov word[score+9], '0'
-	mov cx, 4
+	mov cx, 4+20
 	mov ax, 0xB800
 	mov es, ax
 	call calc_position_start
@@ -435,10 +433,13 @@ update_back_pointer:
 	push ax
 	call get_cords
 	mov di, word[xy_snake_e]
-		
 	
 	cmp word[es:di], 0x0EDC
 	je w2
+	
+	cmp word[es:di], 0x0EB1
+	je w1
+	
 	
 	w1:
 	;down
@@ -449,7 +450,7 @@ update_back_pointer:
 	;up
 	mov ax, word [es:di-160]
 	cmp ax, 0x0EDB
-	je q4
+	je q4 
 
 
 	w2:
@@ -846,8 +847,9 @@ ending_message:
 	mov dh, 0x0A
 	cmp word[iscrashed], 1
 	jne cont7
-	mov dl, 30
-	mov cx, 12
+	mov word[iscrashed], 0
+	mov dl, 21
+	mov cx, 38
 	push cs 
 	pop es 
 	mov bp, crashed
@@ -884,7 +886,7 @@ ending_message:
 	int 0x10 
 
 	
-	cont8:
+	cont8: 
 	mov dx, 0x1700
 	mov cx, 0
 	int 0x10 
