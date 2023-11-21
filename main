@@ -13,7 +13,7 @@ ltmv_s: dw 1
 
 
 
-level: dw 9
+level: dw 8
 xy_fruit_s: dw 0
 x_fruit_s: dw 0
 y_fruit_s: dw 0
@@ -215,10 +215,10 @@ reset:
 	push cx
 	push di
 	push es
-	mov word[level], 9
+	mov word[level], 8
 	mov byte[level_+7], '1'
 	
-	mov word[x_snake_s], 17+20
+	mov word[x_snake_s], 17
 	mov word[y_snake_s], 2
 	mov word[x_snake_e], 13
 	mov word[y_snake_e], 2
@@ -227,7 +227,7 @@ reset:
 	mov word[score+7], '0'
 	mov word[score+8], '0'
 	mov word[score+9], '0'
-	mov cx, 4+20
+	mov cx, 4
 	mov ax, 0xB800
 	mov es, ax
 	call calc_position_start
@@ -463,7 +463,7 @@ update_back_pointer:
 	mov ax, word [es:di-2]
 	cmp ax, 0x0EDC
 	je q2
-	
+	 
 	;down
 	mov ax, word [es:di+160] 
 	cmp ax, 0x0EDB
@@ -658,6 +658,23 @@ bg:
 	mov cx, 40
 	cld 
 	rep stosw
+	
+	mov cx, 19
+	mov di, 330
+	l7:
+	mov word[es:di], 0x06B1
+	mov word[es:di+2], 0x06B1
+	add di, 160
+	loop l7
+	
+	mov cx, 19
+	mov di, 466
+	l8:
+	mov word[es:di], 0x06B1
+	mov word[es:di+2], 0x06B1
+	add di, 160
+	loop l8
+	
 	
 	call info
 	pop es
